@@ -1,0 +1,35 @@
+import json
+
+# 1
+file = open('pokemon_full.json', 'r')
+f = file.read()
+file.close()
+print('Количество символов в файле:', len(f))
+
+# 2
+symbols_without_punct_mark: int = 0
+for symbol in f:
+    if not symbol.isalnum():
+        continue
+    symbols_without_punct_mark += 1
+print('Количество символов без знаков препинания:', symbols_without_punct_mark)
+
+# 3
+pokemon_with_max_description = 0
+len_of_max_description = 1
+f = json.loads(f)
+for pokemon in f:
+    if len(pokemon['description']) > len_of_max_description:
+        len_of_max_description = len(pokemon['description'])
+        pokemon_with_max_description = pokemon['name']
+print('Покемон с самым длинным описанием:', pokemon_with_max_description)
+
+# 4
+max_word = 1
+for skills in f:
+    for ability in skills['abilities']:
+        max_word = max(len(ability.split()), max_word)
+for skills in f:
+    for ability in skills['abilities']:
+        if max_word == len(ability.split()):
+            print('Умение, содержащее больше всего слов:', ability)
