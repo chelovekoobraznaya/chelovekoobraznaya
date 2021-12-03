@@ -18,18 +18,18 @@ print('Количество символов без знаков препина�
 pokemon_with_max_description = 0
 len_of_max_description = 1
 f = json.loads(f)
-for pokemon in f:
-    if len(pokemon['description']) > len_of_max_description:
-        len_of_max_description = len(pokemon['description'])
-        pokemon_with_max_description = pokemon['name']
+for next_pok in f:
+    if len(next_pok['description']) > len_of_max_description:
+        len_of_max_description = len(next_pok['description'])
+        pokemon_with_max_description = next_pok['name']
 print('Покемон с самым длинным описанием:', pokemon_with_max_description)
 
 # 4
 max_word = 1
-for skills in f:
-    for ability in skills['abilities']:
+for pokemon_skills in f:
+    for ability in pokemon_skills['abilities']:
         max_word = max(len(ability.split()), max_word)
-for skills in f:
-    for ability in skills['abilities']:
+for pokemon_skills in f:
+    for ability in pokemon_skills['abilities']:
         if max_word == len(ability.split()):
             print('Умение, содержащее больше всего слов:', ability)
