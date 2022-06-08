@@ -1,0 +1,154 @@
+import matplotlib.pyplot as plt #библиотека построения графиков
+import numpy as np #ПолучИТЬ доступ к numpy объектам используя np общие математические и числовые операции в виде пре-скомпилированных, быстрых функций
+from jupyterthemes import jtplot
+jtplot.style('gruvboxd')
+
+print('Введите номер решаемой задачи:')
+print('1.1 -расчет радиуса поражения')
+print('1.2 -расчет радиуса поражения (сопротивление)')
+print('2.1-попадание по x,y')
+print('2.2-попадание по x,y (сопротивление)')
+ans = str(input())
+
+
+
+x_cel = 0 #костыль
+
+
+# ЗАДАНИЕ 1.1
+g = 9.82
+v0 = k = alpha = 0 #коэф сопротивления
+x_max = (v0 ** 2) * np.sin(2 * alpha) / g + k * v0
+y_max = (v0 ** 2) * (np.sin(alpha) ** 2) / (2 * g)
+
+
+def plot_trace(v0, alpha, **kwargs):#позиционные аргументы
+    g = 9.82
+    tp = v0 * np.sin(alpha) / g                                   #время полъема
+    t = np.linspace(0, 2 * tp, 1000) #создается массив время полета
+    x = v0 * np.cos(alpha) * t
+    y = v0 * np.sin(alpha) * t - g * (t ** 2) / 2
+    plt.figure(figsize=(20, 10)) #ОБЛАСТЬ НА КОТОРОЙ ВСЕ НАРИСОВАНО
+    plt.plot(x, y, **kwargs) #соединение точек в прямую
+    plt.xlim([-1, np.max(x) * 1.1])
+    plt.ylim([-1, np.max(y) * 1.1])
+    plt.xlabel('X, м', fontsize=24) #подпись осей
+    plt.ylabel('Y, м', fontsize=24)
+    plt.title(f'v0 = {v0}, α = {np.degrees(alpha)}', fontsize=20)
+    plt.grid(True) #сетка
+    if 'label' in kwargs:
+        plt.legend(loc='best', fontsize=32)
+    plt.show()
+
+
+
+
+if ans == '1.1' or ans == '2.1':
+    if ans == '1.1':
+        print('Введите угол в градусах:')
+        alpha = np.radians(float(input()))
+        print('Введите начальную скорость:')
+        v0 = float(input())
+        x_max = (v0 ** 2) * np.sin(2 * alpha) / g
+        y_max = (v0 ** 2) * (np.sin(alpha) ** 2) / (2 * g)
+        print("Максимальная дальность:", '%.3f' % x_max) #формат 3 знака после запятой
+    if ans == '2.1':
+        print('Введите координату x')
+        x_goal = float(input())
+        print('Введите координату y')
+        y_goal = float(input())
+        alpha=np.arctan(2*y_goal/x_goal)
+        v0=np.sqrt(2*9.82*y_goal/(np.sin(alpha)*np.sin(alpha)))
+        print('Скорость равна:', '%.3f' % v0, 'м/с')
+        print('Угол равен:', '%.3f' % np.degrees(alpha), 'градусов')
+    plot_trace(v0, alpha, label='траектория полета снаряда', color='white')
+
+
+# ЗАДАНИЕ 1.2
+g = 9.82
+if ans == '1.2' or ans == '2.2':
+    if ans == '1.2':
+        print('Введите угол (в градусах):')
+        alpha = np.radians(float(input()))
+        print('Введите скорость (м/с):')
+        v0 = float(input())
+    if ans == '2.2':
+        print('Введите координату x')
+        x_goal = float(input())
+        if x_goal < 0: #костыль-если у нас коорд отрицательная,то он с обратки рисует
+            x_cel = x_goal
+            x_goal = -x_goal
+        print('Введите координату y')
+        y_goal = float(input())
+    print('Введите k - коэффициент сопротивления:')
+    k = float(input())
+    print('Введите m - массу снаряда (кг):')
+    m = float(input())
+    print('Введите погрешность интегрирования:')
+    step = int(input())
+    if ans == '2.2':
+        alpha = np.radians(1)
+        v0 = 0.1
+        if (x_goal == 0) and (y_goal > 0):  # если бросок вертикально вверх
+            alpha = np.radians(90)
+            v0 = np.sqrt(y_goal * 2 * g)
+        elif (x_goal == 0) and (y_goal < 0):  # если бросок вертикально вниз
+            alpha = 0
+            v0 = 0
+        else:  # иначе
+            while True:
+                if 1 - x_goal * k / (m * v0 * np.cos(alpha)) > 0:
+                    if (np.fabs(y_goal - m / k * ((v0 * np.sin(alpha) + m * g / k) * (
+                            x_goal * k / (v0 * np.cos(alpha) * m)) + g * m / k * np.log(
+                        1 - x_goal * k / (m * v0 * np.cos(alpha)))))) <= 0.01: #смотрим на ошибку
+                        break
+                    else:
+                        alpha += 0.1
+                        if alpha >= np.radians(90):
+                            v0 += 0.01
+                            alpha = np.radians(1)
+                else:
+                    while (1 - x_goal * k / (m * v0 * np.cos(alpha))) <= 0:
+                        alpha += 0.01
+                        if alpha >= np.radians(90):
+                            v0 += 0.01
+                            alpha = np.radians(1)
+
+        print('Скорость равна:', '%.3f' % v0, 'м/с')
+        print('Угол равен:', '%.3f' % np.degrees(alpha), 'градусов')
+     #интегрирование методом эйлера
+    t_poleta = 2 * v0 * np.sin(alpha) / g
+    n = round(t_poleta * 100)
+    vx = [0.0] * n #массив сакоростей
+    vy = [0.0] * n
+    x = [0.0] * n  #массив координата
+    y = [0.0] * n
+    x[0] = y[0] = 0
+    vx[0] = v0 * np.cos(alpha)
+    vy[0] = v0 * np.sin(alpha)
+    delta_t = t_poleta * step * 0.01 #Шаг интегрирования
+    dt = 0
+    i = 1
+    while dt + delta_t < t_poleta:
+        dt += delta_t
+        vx[i] = vx[i - 1] - (k / m * vx[i - 1] * delta_t)
+        vy[i] = vy[i - 1] - ((g + k / m * vy[i - 1]) * delta_t)
+        x[i] = x[i - 1] + vx[i - 1] * delta_t
+        y[i] = y[i - 1] + vy[i - 1] * delta_t
+        if (y[i] < 0): #костыль
+            y[i] = 0.0
+            break
+        i += 1 #количество итераций
+    if ans == '1.2':
+        print('Радиус поражения', x[i],i, 'м')
+    plt.figure(figsize=(20, 10))
+    if x_cel < 0:  #работает костыль
+        for i in range(len(x)):
+            x[i] = -x[i]
+    plt.plot(x, y, label='траектория полета снаряда', color='white')
+    plt.xlabel('X, м', fontsize=24)
+    plt.ylabel('Y, м', fontsize=24)
+    plt.title(f'v0 = {v0}, α = {np.degrees(alpha)}', fontsize=24)
+    plt.grid(True)
+    plt.legend(loc='best', fontsize=20)
+    plt.show()
